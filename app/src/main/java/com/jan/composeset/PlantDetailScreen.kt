@@ -8,7 +8,10 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshotFlow
@@ -24,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.size
 import androidx.compose.ui.zIndex
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -41,9 +45,9 @@ fun SharedTransitionScope.PlantDetailScreen(
 ) {
     val plant = plants.firstOrNull { it.id == plantId } ?: return
 
-    val contentAnimationMilliseconds = 3000
+    val contentAnimationMilliseconds = 350
 
-    var visibilityTarget by remember { mutableStateOf(0F) }
+    var visibilityTarget by remember { mutableFloatStateOf(0F) }
     val contentVisibility by animateFloatAsState(
         targetValue = visibilityTarget,
         animationSpec = tween(durationMillis = contentAnimationMilliseconds),
@@ -168,6 +172,22 @@ fun SharedTransitionScope.PlantDetailScreen(
                     )
                 }
             }
+        }
+        // Back button overlaying the image in top left corner
+        IconButton(
+            onClick = { backTransition(onBackClick) },
+            modifier = Modifier
+                .padding(16.dp)
+                .alpha(contentVisibility)
+                .background(Color(0x30000000), RoundedCornerShape(50))
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = Color.Black,
+                modifier = Modifier
+                    .fillMaxSize()
+            )
         }
     }
 }

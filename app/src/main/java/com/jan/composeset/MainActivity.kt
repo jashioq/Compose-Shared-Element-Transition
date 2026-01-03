@@ -57,14 +57,14 @@ fun SharedElementTransitionApp() {
     val navController = rememberNavController()
 
     val boundsTransform = BoundsTransform { _, _ ->
-        tween(durationMillis = 2000)
+        tween(durationMillis = 1000)
     }
 
     val cornerRadiusState = remember { CornerRadiusState(32F) }
 
     val currentRadius by animateFloatAsState(
         targetValue = cornerRadiusState.cornerRadius,
-        animationSpec = tween(durationMillis = 2000),
+        animationSpec = tween(durationMillis = 1000),
     )
 
     val displayCutoutHeight = WindowInsets.displayCutout.asPaddingValues().calculateTopPadding()

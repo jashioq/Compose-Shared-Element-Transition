@@ -74,7 +74,7 @@ fun SharedTransitionScope.PlantCard(
                 animatedVisibilityScope = animatedVisibilityScope,
                 boundsTransform = boundsTransform,
             )
-            .clip(RoundedCornerShape(32.dp))
+            .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp, bottomStart = cornerRadius, bottomEnd = cornerRadius))
             .background(Color(0xFFdfe6d5))
             .clickable(onClick = onClick)
     ) {
@@ -91,7 +91,7 @@ fun SharedTransitionScope.PlantCard(
                         animatedVisibilityScope = animatedVisibilityScope,
                         boundsTransform = boundsTransform,
                     )
-                    .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp, bottomStart = cornerRadius, bottomEnd = cornerRadius))
+                    .clip(RoundedCornerShape((cornerRadius - 8.dp).coerceAtLeast(0.dp)))
             ) {
                 Image(
                     painter = painterResource(id = plant.imageRes),
