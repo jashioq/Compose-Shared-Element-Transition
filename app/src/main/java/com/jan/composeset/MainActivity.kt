@@ -102,6 +102,7 @@ fun SharedElementTransitionApp() {
                     animatedVisibilityScope = this@composable,
                     boundsTransform = boundsTransform,
                     cornerRadius = currentRadius.dp,
+                    onBackClick = { navController.popBackStack() }
                 ).also {
                     cornerRadiusState.updateRadius(0F)
                 }

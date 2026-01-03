@@ -1,5 +1,6 @@
 package com.jan.composeset
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.SharedTransitionScope
@@ -10,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -23,6 +25,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.zIndex
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun SharedTransitionScope.PlantDetailScreen(
@@ -30,22 +37,40 @@ fun SharedTransitionScope.PlantDetailScreen(
     animatedVisibilityScope: AnimatedVisibilityScope,
     boundsTransform: BoundsTransform,
     cornerRadius: Dp,
+    onBackClick: () -> Unit,
 ) {
     val plant = plants.firstOrNull { it.id == plantId } ?: return
 
-    val visibilityTarget = mutableStateOf(0F)
+    val contentAnimationMilliseconds = 3000
+
+    var visibilityTarget by remember { mutableStateOf(0F) }
     val contentVisibility by animateFloatAsState(
-        targetValue = visibilityTarget.value,
-        tween(2000)
+        targetValue = visibilityTarget,
+        animationSpec = tween(durationMillis = contentAnimationMilliseconds),
+        label = "contentVisibility"
     )
 
-    LaunchedEffect(animatedVisibilityScope.transition.isRunning) {
-        visibilityTarget.value = if (!animatedVisibilityScope.transition.isRunning) {
-            1F
-        } else {
-            0F
+    LaunchedEffect(animatedVisibilityScope.transition.currentState) {
+        visibilityTarget = 0F
+        snapshotFlow { animatedVisibilityScope.transition.isRunning }
+            .collect { isRunning ->
+                if (!isRunning) {
+                    visibilityTarget = 1F
+                }
+            }
+    }
+
+    fun backTransition(onBackClick: () -> Unit) {
+        visibilityTarget = 0F
+        CoroutineScope(Dispatchers.Main).launch {
+            delay(contentAnimationMilliseconds.milliseconds)
+            onBackClick()
         }
     }
+
+    BackHandler(onBack = {
+        backTransition(onBackClick)
+    })
 
     Box(
         modifier = Modifier
