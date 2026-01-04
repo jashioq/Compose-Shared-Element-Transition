@@ -4,11 +4,17 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -27,8 +33,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.size
 import androidx.compose.ui.zIndex
+import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -45,7 +53,22 @@ fun SharedTransitionScope.PlantDetailScreen(
 ) {
     val plant = plants.firstOrNull { it.id == plantId } ?: return
 
-    val contentAnimationMilliseconds = 350
+    val contentAnimationMilliseconds = 500
+
+    // Drag state for the box
+    var dragEnabled by remember { mutableStateOf(false) }
+    var offsetY by remember { mutableFloatStateOf(0f) }
+
+    val defaultBoxDragSpeed = 30F
+    var boxDragSpeed by remember { mutableFloatStateOf(defaultBoxDragSpeed) }
+    var boxOffset = animateFloatAsState(
+        targetValue = offsetY,
+        animationSpec = tween(durationMillis = boxDragSpeed.toInt(), easing = if(boxDragSpeed == defaultBoxDragSpeed) LinearEasing else FastOutSlowInEasing),
+    )
+
+    val draggableState = rememberDraggableState { delta ->
+        offsetY = (offsetY + delta).coerceIn(-1000F, 0F)
+    }
 
     var visibilityTarget by remember { mutableFloatStateOf(0F) }
     val contentVisibility by animateFloatAsState(
@@ -54,20 +77,34 @@ fun SharedTransitionScope.PlantDetailScreen(
         label = "contentVisibility"
     )
 
+    var boxZIndex by remember { mutableFloatStateOf(0F) }
+
     LaunchedEffect(animatedVisibilityScope.transition.currentState) {
+        // Reset states when transition starts
         visibilityTarget = 0F
+        dragEnabled = false
+
         snapshotFlow { animatedVisibilityScope.transition.isRunning }
             .collect { isRunning ->
                 if (!isRunning) {
                     visibilityTarget = 1F
+                    CoroutineScope(Dispatchers.Main).launch {
+                        delay(contentAnimationMilliseconds.milliseconds)
+                        dragEnabled = true
+                        boxZIndex = 1F
+                    }
                 }
             }
     }
 
     fun backTransition(onBackClick: () -> Unit) {
+        dragEnabled = false
         visibilityTarget = 0F
+        boxDragSpeed = contentAnimationMilliseconds.toFloat()
+        offsetY = 0F
         CoroutineScope(Dispatchers.Main).launch {
             delay(contentAnimationMilliseconds.milliseconds)
+            boxZIndex = 0F
             onBackClick()
         }
     }
@@ -96,7 +133,6 @@ fun SharedTransitionScope.PlantDetailScreen(
                         boundsTransform = boundsTransform
                     )
                     .clip(RoundedCornerShape(cornerRadius))
-                    .zIndex(1f)
             ) {
                 Image(
                     painter = painterResource(id = plant.imageRes),
@@ -110,11 +146,22 @@ fun SharedTransitionScope.PlantDetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxSize()
+                    .offset { IntOffset(0, boxOffset.value.roundToInt()) }
                     .sharedElement(
                         sharedContentState = rememberSharedContentState(key = "box-${plant.id}"),
                         animatedVisibilityScope = animatedVisibilityScope,
                         boundsTransform = boundsTransform,
                     )
+                    .let { modifier ->
+                        if (dragEnabled) {
+                            modifier.draggable(
+                                state = draggableState,
+                                orientation = Orientation.Vertical
+                            )
+                        } else {
+                            modifier
+                        }
+                    }
                     .clip(
                         RoundedCornerShape(
                             topStart = 32.dp,
@@ -123,7 +170,8 @@ fun SharedTransitionScope.PlantDetailScreen(
                             bottomEnd = cornerRadius
                         )
                     )
-                    .background(Color(0xFFdfe6d5)),
+                    .background(Color(0xFFdfe6d5))
+                    .zIndex(boxZIndex),
             ) {
                 // Content with reveal animation
                 Column(
