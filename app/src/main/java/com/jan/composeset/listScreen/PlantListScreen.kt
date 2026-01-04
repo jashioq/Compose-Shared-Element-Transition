@@ -35,6 +35,7 @@ fun SharedTransitionScope.PlantListScreen(
     onPlantClick: (Int) -> Unit,
     boundsTransform: BoundsTransform,
     cornerRadius: Dp,
+    selectedPlantId: Int?,
     displayCutoutHeight: Dp,
 ) {
     LazyColumn(
@@ -51,7 +52,7 @@ fun SharedTransitionScope.PlantListScreen(
                 onClick = {
                     onPlantClick(plant.id)
                 },
-                cornerRadius = cornerRadius,
+                cornerRadius = if (plant.id == selectedPlantId) cornerRadius else Dimensions.CornerRadiusLarge,
                 displayCutoutHeight = displayCutoutHeight,
             )
         }

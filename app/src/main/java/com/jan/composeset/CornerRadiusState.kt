@@ -10,7 +10,11 @@ class CornerRadiusState(
     var cornerRadius: Float by mutableStateOf(initialProgress)
         private set
 
-    fun updateRadius(newRadius: Float) {
+    var selectedPlantId: Int? by mutableStateOf(null)
+        private set
+
+    fun updateRadius(newRadius: Float, plantId: Int? = null) {
         cornerRadius = newRadius.coerceAtLeast(0F)
+        selectedPlantId = plantId
     }
 }

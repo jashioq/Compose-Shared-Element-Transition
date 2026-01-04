@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -27,13 +26,12 @@ fun SharedTransitionScope.PlantNavigation(
     boundsTransform: BoundsTransform,
     cornerRadiusState: CornerRadiusState
 ) {
+    val displayCutoutHeight = WindowInsets.displayCutout.asPaddingValues().calculateTopPadding()
+
     val currentRadius by animateFloatAsState(
         targetValue = cornerRadiusState.cornerRadius,
         animationSpec = tween(durationMillis = AnimationConfig.BOUNDS_TRANSITION_MS),
-        label = "cornerRadius"
     )
-
-    val displayCutoutHeight = WindowInsets.displayCutout.asPaddingValues().calculateTopPadding()
 
     NavHost(
         navController = navController,
@@ -42,15 +40,15 @@ fun SharedTransitionScope.PlantNavigation(
         composable("list") {
             PlantListScreen(
                 animatedVisibilityScope = this@composable,
-                onPlantClick = {
-                    navController.navigate("detail/${it}")
+                onPlantClick = { plantId ->
+                    cornerRadiusState.updateRadius(Dimensions.CornerRadiusNone.value, plantId)
+                    navController.navigate("detail/${plantId}")
                 },
                 boundsTransform = boundsTransform,
                 cornerRadius = currentRadius.dp,
+                selectedPlantId = cornerRadiusState.selectedPlantId,
                 displayCutoutHeight = displayCutoutHeight,
-            ).also {
-                cornerRadiusState.updateRadius(Dimensions.CornerRadiusLarge.value)
-            }
+            )
         }
 
         composable(
@@ -60,15 +58,17 @@ fun SharedTransitionScope.PlantNavigation(
             )
         ) { backStackEntry ->
             val plantId = backStackEntry.arguments?.getInt("plantId") ?: 1
+
             PlantDetailScreen(
                 plantId = plantId,
                 animatedVisibilityScope = this@composable,
                 boundsTransform = boundsTransform,
                 cornerRadius = currentRadius.dp,
-                onBackClick = { navController.popBackStack() }
-            ).also {
-                cornerRadiusState.updateRadius(Dimensions.CornerRadiusNone.value)
-            }
+                onBackClick = {
+                    cornerRadiusState.updateRadius(Dimensions.CornerRadiusLarge.value, plantId)
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
