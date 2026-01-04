@@ -1,4 +1,4 @@
-package com.jan.composeset
+package com.jan.composeset.listScreen
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.BoundsTransform
@@ -14,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
@@ -24,6 +23,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.Dp
+import com.jan.composeset.Dimensions
+import com.jan.composeset.Plant
+import com.jan.composeset.plants
+import com.jan.composeset.ui.theme.PlantCardBackground
+import com.jan.composeset.ui.theme.ScientificNameGray
 
 @Composable
 fun SharedTransitionScope.PlantListScreen(
@@ -34,8 +38,8 @@ fun SharedTransitionScope.PlantListScreen(
     displayCutoutHeight: Dp,
 ) {
     LazyColumn(
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(Dimensions.CardPadding),
+        verticalArrangement = Arrangement.spacedBy(Dimensions.CardSpacing),
         modifier = Modifier
             .fillMaxSize()
     ) {
@@ -74,24 +78,24 @@ fun SharedTransitionScope.PlantCard(
                 animatedVisibilityScope = animatedVisibilityScope,
                 boundsTransform = boundsTransform,
             )
-            .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp, bottomStart = cornerRadius, bottomEnd = cornerRadius))
-            .background(Color(0xFFdfe6d5))
+            .clip(RoundedCornerShape(topStart = Dimensions.CornerRadiusLarge, topEnd = Dimensions.CornerRadiusLarge, bottomStart = cornerRadius, bottomEnd = cornerRadius))
+            .background(PlantCardBackground)
             .clickable(onClick = onClick)
     ) {
         Row(
-            modifier = Modifier.padding(8.dp),
+            modifier = Modifier.padding(Dimensions.MediumSpacing),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .width(100.dp)
+                    .width(Dimensions.ImageContainerWidth)
                     .aspectRatio(1f)
                     .sharedElement(
                         sharedContentState = rememberSharedContentState(key = "image-${plant.id}"),
                         animatedVisibilityScope = animatedVisibilityScope,
                         boundsTransform = boundsTransform,
                     )
-                    .clip(RoundedCornerShape((cornerRadius - 8.dp).coerceAtLeast(0.dp)))
+                    .clip(RoundedCornerShape((cornerRadius - Dimensions.MediumSpacing).coerceAtLeast(0.dp)))
             ) {
                 Image(
                     painter = painterResource(id = plant.imageRes),
@@ -101,7 +105,7 @@ fun SharedTransitionScope.PlantCard(
                 )
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(Dimensions.LargeSpacing))
 
             Column(
                 modifier = Modifier.weight(1f)
@@ -120,13 +124,13 @@ fun SharedTransitionScope.PlantCard(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(Dimensions.SmallSpacing))
 
                 Text(
                     text = plant.scientificName,
                     fontSize = 18.sp,
                     fontStyle = FontStyle.Italic,
-                    color = Color.Gray,
+                    color = ScientificNameGray,
                     modifier = Modifier
                         .sharedElement(
                             sharedContentState = rememberSharedContentState(key = "scientific-name-${plant.id}"),
