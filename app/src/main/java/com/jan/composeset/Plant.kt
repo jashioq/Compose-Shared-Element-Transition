@@ -24,7 +24,7 @@ val plants = listOf(
         name = "Monstera",
         scientificName = "Monstera deliciosa",
         imageRes = R.drawable.monstera,
-        details = "The Monstera Deliciosa, also known as the Swiss Cheese Plant, is famous for its large, distinctive split leaves. It's a popular statement plant that brings a tropical feel to any space.",
+        details = "The Monstera Deliciosa, also known as the Swiss Cheese Plant, is famous for its large, distinctive split leaves. It's a popular statement plant that brings a tropical feel to any space.".repeat(8),
         careInstructions = "Water: When top 2 inches of soil are dry\nLight: Bright, indirect light\nTemp: 65-85°F (18-29°C)\nTips: Wipe leaves to remove dust",
         difficulty = Difficulty.EASY
     ),

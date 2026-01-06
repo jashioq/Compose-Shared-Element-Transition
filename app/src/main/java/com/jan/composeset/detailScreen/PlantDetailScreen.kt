@@ -13,9 +13,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
@@ -24,6 +26,7 @@ import androidx.compose.ui.unit.Dp
 import com.jan.composeset.AnimationConfig
 import com.jan.composeset.plants
 import com.jan.composeset.ui.theme.DetailBackground
+import com.jan.composeset.ui.theme.PlantCardBackground
 
 @Composable
 fun SharedTransitionScope.PlantDetailScreen(

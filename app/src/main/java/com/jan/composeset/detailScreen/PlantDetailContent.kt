@@ -11,11 +11,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -36,10 +39,13 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.util.fastRoundToInt
 import com.jan.composeset.Dimensions
 import com.jan.composeset.Plant
 import com.jan.composeset.ui.theme.PlantCardBackground
 import com.jan.composeset.ui.theme.ScientificNameGray
+import kotlin.math.floor
 import kotlin.math.roundToInt
 
 @Composable
@@ -79,18 +85,42 @@ fun SharedTransitionScope.PlantDetailBox(
     animatedVisibilityScope: AnimatedVisibilityScope,
     boundsTransform: BoundsTransform
 ) {
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp.dp
+    val screenWidth = configuration.screenWidthDp.dp
+    // Image uses aspectRatio(1f) on fillMaxWidth, so image height = screen width
+    val imageHeight = screenWidth
+    state.boxAvailableHeight = (screenHeight - imageHeight).value
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxSize()
-            .offset { IntOffset(0, boxOffset.roundToInt()) }
+            .let { modifier ->
+                if (state.dragEnabled || state.visibilityTarget == 1f) {
+                    modifier.wrapContentHeight(unbounded = true)
+                } else {
+                    modifier.fillMaxSize()
+                }
+            }
+            .defaultMinSize(minHeight = state.boxAvailableHeight.dp)
+            .onSizeChanged { size ->
+                if (state.dragEnabled) {
+                    state.boxHeightAfterDrag = size.height.toFloat()
+                } else {
+                    state.boxHeightBeforeDrag = size.height.toFloat()
+                }
+            }
+            .offset {
+                val adjustment = state.getOffsetAdjustment()
+                IntOffset(0, (boxOffset + adjustment).roundToInt())
+            }
             .sharedElement(
                 sharedContentState = rememberSharedContentState(key = "box-${plant.id}"),
                 animatedVisibilityScope = animatedVisibilityScope,
                 boundsTransform = boundsTransform,
             )
             .let { modifier ->
-                if (state.dragEnabled) {
+                if (state.dragEnabled && state.getOffsetAdjustment() > 0) {
                     modifier.draggable(
                         state = state.draggableState,
                         orientation = Orientation.Vertical

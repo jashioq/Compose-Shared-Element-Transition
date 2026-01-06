@@ -13,6 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.floor
 import kotlin.time.Duration.Companion.milliseconds
 
 @Stable
@@ -32,11 +33,24 @@ class PlantDetailState {
     var boxZIndex by mutableFloatStateOf(0F)
         private set
 
+    var boxHeightBeforeDrag by mutableFloatStateOf(0f)
+    var boxHeightAfterDrag by mutableFloatStateOf(0f)
+
+    var boxAvailableHeight by mutableFloatStateOf(0f)
+
     val draggableState = DraggableState { delta ->
         offsetY = (offsetY + delta).coerceIn(
             AnimationConfig.DRAG_OFFSET_MIN,
             AnimationConfig.DRAG_OFFSET_MAX
         )
+    }
+
+    fun getOffsetAdjustment(): Float {
+        return if (dragEnabled && boxHeightAfterDrag > 0f && boxHeightBeforeDrag > 0f) {
+            floor(((boxHeightAfterDrag - boxHeightBeforeDrag) / 2).coerceAtLeast(0f))
+        } else {
+            0f
+        }
     }
 
     fun startEnterAnimation() {
@@ -58,10 +72,6 @@ class PlantDetailState {
             boxZIndex = 0F
             onComplete()
         }
-    }
-
-    fun disableDrag() {
-        dragEnabled = false
     }
 
     fun resetForTransition() {
