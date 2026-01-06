@@ -98,10 +98,25 @@ fun SharedTransitionScope.PlantDetailBox(
     var boxHeightBeforeDrag by remember { mutableFloatStateOf(0f) }
     var boxHeightAfterDrag by remember { mutableFloatStateOf(0f) }
 
-    // Create draggable state that sends to controller
+    // Helper function to calculate offset adjustment (like original implementation)
+    fun getOffsetAdjustment(): Float {
+        return if (boxHeightAfterDrag > 0f && boxHeightBeforeDrag > 0f) {
+            floor(((boxHeightAfterDrag - boxHeightBeforeDrag) / 2).coerceAtLeast(0f))
+        } else {
+            0f
+        }
+    }
+
+    // Create draggable state that sends to controller with dynamic limits
     val draggableState = remember {
         DraggableState { delta ->
-            animationController.updateDragOffset(delta)
+            // Calculate drag limits based on current box size difference
+            val maxDragDistance = if (boxHeightAfterDrag > 0f && boxHeightBeforeDrag > 0f) {
+                -(boxHeightAfterDrag - boxHeightBeforeDrag)
+            } else {
+                0f
+            }
+            animationController.updateDragOffset(delta, minOffset = maxDragDistance, maxOffset = 0f)
         }
     }
 
@@ -143,7 +158,7 @@ fun SharedTransitionScope.PlantDetailBox(
         modifier = Modifier
             .fillMaxWidth()
             .let { modifier ->
-                if (animationState.boxShouldWrapContent) {
+                if (contentVisibility != 0f) {
                     modifier.wrapContentHeight(unbounded = true)
                 } else {
                     modifier.fillMaxSize()
@@ -151,21 +166,15 @@ fun SharedTransitionScope.PlantDetailBox(
             }
             .defaultMinSize(minHeight = boxAvailableHeight.dp)
             .onSizeChanged { size ->
-                if (animationState.boxShouldWrapContent) {
+                if (animationState.dragEnabled || animationState.contentVisibilityTarget == 1f) {
                     boxHeightAfterDrag = size.height.toFloat()
-                    // Calculate and update offset adjustment
-                    val adjustment = if (boxHeightAfterDrag > 0f && boxHeightBeforeDrag > 0f) {
-                        floor(((boxHeightAfterDrag - boxHeightBeforeDrag) / 2).coerceAtLeast(0f))
-                    } else {
-                        0f
-                    }
-                    animationController.updateOffsetAdjustment(adjustment)
                 } else {
                     boxHeightBeforeDrag = size.height.toFloat()
                 }
             }
             .offset {
-                IntOffset(0, (boxOffset + animationState.offsetAdjustment).roundToInt())
+                val adjustment = getOffsetAdjustment()
+                IntOffset(0, (boxOffset + adjustment).roundToInt())
             }
             .sharedElement(
                 sharedContentState = rememberSharedContentState(key = "box-${plant.id}"),
@@ -251,7 +260,10 @@ fun PlantDetailBackButton(
         modifier = Modifier
             .padding(Dimensions.ContentPadding)
             .alpha(alpha)
-            .background(Color.Black.copy(alpha = 0.3f), RoundedCornerShape(Dimensions.BackButtonSize))
+            .background(
+                Color.Black.copy(alpha = 0.3f),
+                RoundedCornerShape(Dimensions.BackButtonSize)
+            )
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowBack,

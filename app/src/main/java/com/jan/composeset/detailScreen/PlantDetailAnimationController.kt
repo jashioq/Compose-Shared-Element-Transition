@@ -40,7 +40,7 @@ class PlantDetailAnimationController(
             is AnimationAction.AnimateEntry -> handleEntryAnimation()
             is AnimationAction.AnimateExit -> handleExitAnimation(action.onComplete)
             is AnimationAction.UpdateOffsetAdjustment -> handleOffsetAdjustmentUpdate(action.adjustment)
-            is AnimationAction.UpdateDragOffset -> handleDragOffsetUpdate(action.delta)
+            is AnimationAction.UpdateDragOffset -> handleDragOffsetUpdate(action)
         }
     }
 
@@ -50,7 +50,7 @@ class PlantDetailAnimationController(
         // Wait for bounds transition to complete FIRST
         delay(AnimationConfig.BOUNDS_TRANSITION_MS.milliseconds)
 
-        // Stage 1: Enable box wrap content AFTER transition, BEFORE visibility
+        // Stage 1: Enable box wrap content (offset adjustment will be calculated when height updates come in)
         _animationState.update { it.copy(boxShouldWrapContent = true) }
 
         // Stage 2: Start visibility fade-in
@@ -82,12 +82,13 @@ class PlantDetailAnimationController(
         }
         delay(AnimationConfig.CONTENT_FADE_MS.milliseconds)
 
-        // Stage 2: Reset box wrap content, z-index, and drag speed
+        // Stage 2: Reset box wrap content AND offset adjustment in the SAME emission
         _animationState.update {
             it.copy(
                 boxShouldWrapContent = false,
                 boxZIndex = 0f,
-                boxOffsetAnimationSpeed = AnimationConfig.DEFAULT_DRAG_SPEED
+                boxOffsetAnimationSpeed = AnimationConfig.DEFAULT_DRAG_SPEED,
+                offsetAdjustment = 0f
             )
         }
 
@@ -101,10 +102,10 @@ class PlantDetailAnimationController(
         _animationState.update { it.copy(offsetAdjustment = adjustment) }
     }
 
-    private suspend fun handleDragOffsetUpdate(delta: Float) {
-        val newOffset = (_animationState.value.boxOffsetYTarget + delta).coerceIn(
-            AnimationConfig.DRAG_OFFSET_MIN,
-            AnimationConfig.DRAG_OFFSET_MAX
+    private suspend fun handleDragOffsetUpdate(action: AnimationAction.UpdateDragOffset) {
+        val newOffset = (_animationState.value.boxOffsetYTarget + action.delta).coerceIn(
+            action.minOffset,
+            action.maxOffset
         )
 
         _animationState.update {
@@ -127,8 +128,8 @@ class PlantDetailAnimationController(
         actionChannel.trySend(AnimationAction.UpdateOffsetAdjustment(adjustment))
     }
 
-    fun updateDragOffset(delta: Float) {
-        actionChannel.trySend(AnimationAction.UpdateDragOffset(delta))
+    fun updateDragOffset(delta: Float, minOffset: Float, maxOffset: Float) {
+        actionChannel.trySend(AnimationAction.UpdateDragOffset(delta, minOffset, maxOffset))
     }
 
     fun dispose() {
