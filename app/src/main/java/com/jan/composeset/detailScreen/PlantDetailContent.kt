@@ -36,6 +36,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -61,8 +63,17 @@ fun SharedTransitionScope.PlantDetailImage(
     plant: Plant,
     cornerRadius: Dp,
     animatedVisibilityScope: AnimatedVisibilityScope,
+    animationController: PlantDetailAnimationController,
     boundsTransform: BoundsTransform
 ) {
+    val animationState by animationController.animationState.collectAsState()
+    val contentVisibility by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = animationState.contentVisibilityTarget,
+        animationSpec = androidx.compose.animation.core.tween(
+            durationMillis = AnimationConfig.CONTENT_FADE_MS
+        ),
+    )
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -79,6 +90,24 @@ fun SharedTransitionScope.PlantDetailImage(
             contentDescription = plant.name,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
+        )
+
+        // Black fading edge at the bottom
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(32.dp)
+                .align(androidx.compose.ui.Alignment.BottomCenter)
+                .alpha(contentVisibility)
+                .background(
+                    brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.07f),
+                            Color.Black.copy(alpha = 0.2f)
+                        )
+                    )
+                )
         )
     }
 }

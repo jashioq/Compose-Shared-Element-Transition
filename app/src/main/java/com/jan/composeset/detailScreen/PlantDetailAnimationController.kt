@@ -41,6 +41,7 @@ class PlantDetailAnimationController(
             is AnimationAction.AnimateExit -> handleExitAnimation(action.onComplete)
             is AnimationAction.UpdateOffsetAdjustment -> handleOffsetAdjustmentUpdate(action.adjustment)
             is AnimationAction.UpdateDragOffset -> handleDragOffsetUpdate(action)
+            is AnimationAction.ResetState -> _animationState.update { AnimationState() }
         }
     }
 
@@ -133,6 +134,7 @@ class PlantDetailAnimationController(
     }
 
     fun dispose() {
+        actionChannel.trySend(AnimationAction.ResetState)
         scope.cancel()
         actionChannel.close()
     }

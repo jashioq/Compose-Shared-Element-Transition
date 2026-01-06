@@ -72,7 +72,7 @@ fun SharedTransitionScope.PlantDetailScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DetailBackground)
+            .background(PlantCardBackground)
             .windowInsetsPadding(WindowInsets.statusBars)
     ) {
         Column(
@@ -80,6 +80,7 @@ fun SharedTransitionScope.PlantDetailScreen(
         ) {
             PlantDetailImage(
                 plant = plant,
+                animationController = animationController,
                 cornerRadius = cornerRadius,
                 animatedVisibilityScope = animatedVisibilityScope,
                 boundsTransform = boundsTransform
