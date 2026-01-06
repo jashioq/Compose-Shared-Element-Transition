@@ -25,7 +25,14 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.foundation.gestures.DraggableState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -41,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.util.fastRoundToInt
+import com.jan.composeset.AnimationConfig
 import com.jan.composeset.Dimensions
 import com.jan.composeset.Plant
 import com.jan.composeset.ui.theme.PlantCardBackground
@@ -78,41 +86,86 @@ fun SharedTransitionScope.PlantDetailImage(
 @Composable
 fun SharedTransitionScope.PlantDetailBox(
     plant: Plant,
-    state: PlantDetailState,
-    boxOffset: Float,
+    animationController: PlantDetailAnimationController,
     cornerRadius: Dp,
-    contentVisibility: Float,
     animatedVisibilityScope: AnimatedVisibilityScope,
     boundsTransform: BoundsTransform
 ) {
+    // Collect animation state
+    val animationState by animationController.animationState.collectAsState()
+
+    // Create internal state for height tracking
+    var boxHeightBeforeDrag by remember { mutableFloatStateOf(0f) }
+    var boxHeightAfterDrag by remember { mutableFloatStateOf(0f) }
+
+    // Create draggable state that sends to controller
+    val draggableState = remember {
+        DraggableState { delta ->
+            animationController.updateDragOffset(delta)
+        }
+    }
+
+    // Animate box offset using target and speed from controller
+    val boxOffset by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = animationState.boxOffsetYTarget,
+        animationSpec = androidx.compose.animation.core.tween(
+            durationMillis = animationState.boxOffsetAnimationSpeed.toInt(),
+            easing = if (animationState.boxOffsetAnimationSpeed == AnimationConfig.DEFAULT_DRAG_SPEED)
+                androidx.compose.animation.core.LinearEasing
+            else
+                androidx.compose.animation.core.FastOutSlowInEasing
+        ),
+        label = "boxOffset"
+    )
+
+    // Animate content visibility using target from controller
+    val contentVisibility by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = animationState.contentVisibilityTarget,
+        animationSpec = androidx.compose.animation.core.tween(
+            durationMillis = AnimationConfig.CONTENT_FADE_MS
+        ),
+        label = "contentVisibility"
+    )
+
+    // Trigger entry animation on first composition
+    LaunchedEffect(Unit) {
+        animationController.animateEntry()
+    }
+
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     val screenWidth = configuration.screenWidthDp.dp
     // Image uses aspectRatio(1f) on fillMaxWidth, so image height = screen width
     val imageHeight = screenWidth
-    state.boxAvailableHeight = (screenHeight - imageHeight).value
+    val boxAvailableHeight = (screenHeight - imageHeight).value
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .let { modifier ->
-                if (state.dragEnabled || state.visibilityTarget == 1f) {
+                if (animationState.boxShouldWrapContent) {
                     modifier.wrapContentHeight(unbounded = true)
                 } else {
                     modifier.fillMaxSize()
                 }
             }
-            .defaultMinSize(minHeight = state.boxAvailableHeight.dp)
+            .defaultMinSize(minHeight = boxAvailableHeight.dp)
             .onSizeChanged { size ->
-                if (state.dragEnabled) {
-                    state.boxHeightAfterDrag = size.height.toFloat()
+                if (animationState.boxShouldWrapContent) {
+                    boxHeightAfterDrag = size.height.toFloat()
+                    // Calculate and update offset adjustment
+                    val adjustment = if (boxHeightAfterDrag > 0f && boxHeightBeforeDrag > 0f) {
+                        floor(((boxHeightAfterDrag - boxHeightBeforeDrag) / 2).coerceAtLeast(0f))
+                    } else {
+                        0f
+                    }
+                    animationController.updateOffsetAdjustment(adjustment)
                 } else {
-                    state.boxHeightBeforeDrag = size.height.toFloat()
+                    boxHeightBeforeDrag = size.height.toFloat()
                 }
             }
             .offset {
-                val adjustment = state.getOffsetAdjustment()
-                IntOffset(0, (boxOffset + adjustment).roundToInt())
+                IntOffset(0, (boxOffset + animationState.offsetAdjustment).roundToInt())
             }
             .sharedElement(
                 sharedContentState = rememberSharedContentState(key = "box-${plant.id}"),
@@ -120,9 +173,9 @@ fun SharedTransitionScope.PlantDetailBox(
                 boundsTransform = boundsTransform,
             )
             .let { modifier ->
-                if (state.dragEnabled && state.getOffsetAdjustment() > 0) {
+                if (animationState.dragEnabled) {
                     modifier.draggable(
-                        state = state.draggableState,
+                        state = draggableState,
                         orientation = Orientation.Vertical
                     )
                 } else {
@@ -138,7 +191,7 @@ fun SharedTransitionScope.PlantDetailBox(
                 )
             )
             .background(PlantCardBackground)
-            .zIndex(state.boxZIndex),
+            .zIndex(animationState.boxZIndex),
     ) {
         Column(
             modifier = Modifier

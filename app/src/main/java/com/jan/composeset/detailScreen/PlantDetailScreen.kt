@@ -18,8 +18,11 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -37,37 +40,33 @@ fun SharedTransitionScope.PlantDetailScreen(
     onBackClick: () -> Unit,
 ) {
     val plant = plants.firstOrNull { it.id == plantId } ?: return
-    val state = rememberPlantDetailState()
 
-    val boxOffset by animateFloatAsState(
-        targetValue = state.offsetY,
+    // Create animation controller
+    val animationController = remember {
+        PlantDetailAnimationController(onNavigateBack = onBackClick)
+    }
+
+    // Collect animation state
+    val animationState by animationController.animationState.collectAsState()
+
+    // Animate back button alpha using same target as content visibility
+    val backButtonAlpha by animateFloatAsState(
+        targetValue = animationState.contentVisibilityTarget,
         animationSpec = tween(
-            durationMillis = state.boxDragSpeed.toInt(),
-            easing = if (state.boxDragSpeed == AnimationConfig.DEFAULT_DRAG_SPEED)
-                LinearEasing else FastOutSlowInEasing
+            durationMillis = AnimationConfig.CONTENT_FADE_MS
         ),
-        label = "boxOffset"
+        label = "backButtonAlpha"
     )
 
-    val contentVisibility by animateFloatAsState(
-        targetValue = state.visibilityTarget,
-        animationSpec = tween(durationMillis = AnimationConfig.CONTENT_FADE_MS),
-        label = "contentVisibility"
-    )
-
-    LaunchedEffect(animatedVisibilityScope.transition.currentState) {
-        state.resetForTransition()
-
-        snapshotFlow { animatedVisibilityScope.transition.isRunning }
-            .collect { isRunning ->
-                if (!isRunning) {
-                    state.startEnterAnimation()
-                }
-            }
+    // Dispose controller when leaving composition
+    DisposableEffect(Unit) {
+        onDispose {
+            animationController.dispose()
+        }
     }
 
     BackHandler(onBack = {
-        state.startExitAnimation(onBackClick)
+        animationController.animateExit()
     })
 
     Box(
@@ -88,18 +87,16 @@ fun SharedTransitionScope.PlantDetailScreen(
 
             PlantDetailBox(
                 plant = plant,
-                state = state,
-                boxOffset = boxOffset,
+                animationController = animationController,
                 cornerRadius = cornerRadius,
-                contentVisibility = contentVisibility,
                 animatedVisibilityScope = animatedVisibilityScope,
                 boundsTransform = boundsTransform
             )
         }
 
         PlantDetailBackButton(
-            onClick = { state.startExitAnimation(onBackClick) },
-            alpha = contentVisibility
+            onClick = { animationController.animateExit() },
+            alpha = backButtonAlpha
         )
     }
 }
