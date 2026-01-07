@@ -4,8 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -13,23 +12,20 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.Dp
 import com.jan.composeset.AnimationConfig
 import com.jan.composeset.plants
 import com.jan.composeset.ui.theme.DetailBackground
-import com.jan.composeset.ui.theme.PlantCardBackground
+import com.jan.composeset.ui.theme.InitialDetailBackground
 
 @Composable
 fun SharedTransitionScope.PlantDetailScreen(
@@ -58,6 +54,19 @@ fun SharedTransitionScope.PlantDetailScreen(
         label = "backButtonAlpha"
     )
 
+    // Animate background color from green to semi-transparent black
+    val backgroundColor by animateColorAsState(
+        targetValue = lerp(
+            InitialDetailBackground,
+            DetailBackground,
+            animationState.contentVisibilityTarget
+        ),
+        animationSpec = tween(
+            durationMillis = AnimationConfig.CONTENT_FADE_MS
+        ),
+        label = "backgroundColor"
+    )
+
     // Dispose controller when leaving composition
     DisposableEffect(Unit) {
         onDispose {
@@ -72,7 +81,7 @@ fun SharedTransitionScope.PlantDetailScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(PlantCardBackground)
+            .background(backgroundColor)
             .windowInsetsPadding(WindowInsets.statusBars)
     ) {
         Column(

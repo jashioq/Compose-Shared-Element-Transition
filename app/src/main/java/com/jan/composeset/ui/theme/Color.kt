@@ -12,5 +12,6 @@ val Pink40 = Color(0xFF7D5260)
 
 // Plant app colors
 val PlantCardBackground = Color(0xFFdfe6d5)
-val DetailBackground = Color.White
+val InitialDetailBackground = Color.White
+val DetailBackground = Color.LightGray
 val ScientificNameGray = Color.Gray

@@ -39,6 +39,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
@@ -53,6 +55,7 @@ import androidx.compose.ui.util.fastRoundToInt
 import com.jan.composeset.AnimationConfig
 import com.jan.composeset.Dimensions
 import com.jan.composeset.Plant
+import com.jan.composeset.ui.theme.DetailBackground
 import com.jan.composeset.ui.theme.PlantCardBackground
 import com.jan.composeset.ui.theme.ScientificNameGray
 import kotlin.math.floor
@@ -103,8 +106,7 @@ fun SharedTransitionScope.PlantDetailImage(
                     brush = androidx.compose.ui.graphics.Brush.verticalGradient(
                         colors = listOf(
                             Color.Transparent,
-                            Color.Black.copy(alpha = 0.07f),
-                            Color.Black.copy(alpha = 0.2f)
+                            DetailBackground,
                         )
                     )
                 )
@@ -205,6 +207,18 @@ fun SharedTransitionScope.PlantDetailBox(
                 val adjustment = getOffsetAdjustment()
                 IntOffset(0, (boxOffset + adjustment).roundToInt())
             }
+            .shadow(
+                elevation = 16.dp,
+                shape = RoundedCornerShape(
+                    topStart = Dimensions.CornerRadiusLarge,
+                    topEnd = Dimensions.CornerRadiusLarge,
+                    bottomStart = cornerRadius,
+                    bottomEnd = cornerRadius
+                ),
+                ambientColor = Color.Black.copy(alpha = contentVisibility),
+                spotColor = Color.Black.copy(alpha = contentVisibility),
+                clip = false
+            )
             .sharedElement(
                 sharedContentState = rememberSharedContentState(key = "box-${plant.id}"),
                 animatedVisibilityScope = animatedVisibilityScope,
