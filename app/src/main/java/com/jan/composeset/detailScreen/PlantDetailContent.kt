@@ -17,15 +17,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.Thermostat
+import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.foundation.gestures.DraggableState
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -36,11 +42,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.shadow.Shadow
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
@@ -51,15 +56,31 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.util.fastRoundToInt
 import com.jan.composeset.AnimationConfig
+import com.jan.composeset.Difficulty
 import com.jan.composeset.Dimensions
 import com.jan.composeset.Plant
+import com.jan.composeset.ui.theme.LightGray
+import com.jan.composeset.ui.theme.DarkGray
 import com.jan.composeset.ui.theme.DetailBackground
+import com.jan.composeset.ui.theme.DifficultyEasy
+import com.jan.composeset.ui.theme.DifficultyHard
+import com.jan.composeset.ui.theme.DifficultyMedium
 import com.jan.composeset.ui.theme.PlantCardBackground
 import com.jan.composeset.ui.theme.ScientificNameGray
 import kotlin.math.floor
 import kotlin.math.roundToInt
+
+// Helper function to get care icon based on label
+fun getCareIcon(label: String): ImageVector? {
+    return when (label.lowercase()) {
+        "water" -> Icons.Filled.WaterDrop
+        "light" -> Icons.Filled.WbSunny
+        "temp" -> Icons.Filled.Thermostat
+        "tips" -> Icons.Filled.Lightbulb
+        else -> null
+    }
+}
 
 @Composable
 fun SharedTransitionScope.PlantDetailImage(
@@ -111,6 +132,79 @@ fun SharedTransitionScope.PlantDetailImage(
                     )
                 )
         )
+    }
+}
+
+@Composable
+fun DifficultyBadge(
+    difficulty: Difficulty,
+    alpha: Float,
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor = when (difficulty) {
+        Difficulty.EASY -> DifficultyEasy
+        Difficulty.MEDIUM -> DifficultyMedium
+        Difficulty.HARD -> DifficultyHard
+    }
+
+    val textColor = when (difficulty) {
+        Difficulty.EASY -> Color(0xFF2D6A4F)      // Dark green
+        Difficulty.MEDIUM -> Color(0xFF8B7500)    // Dark yellow/gold
+        Difficulty.HARD -> Color(0xFFC1666B)      // Dark rose
+    }
+
+    Box(
+        modifier = modifier
+            .alpha(alpha)
+            .background(
+                color = backgroundColor,
+                shape = RoundedCornerShape(50)
+            )
+            .padding(horizontal = 10.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = difficulty.name,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = textColor
+        )
+    }
+}
+
+@Composable
+fun CareInstructionItem(
+    icon: ImageVector,
+    label: String,
+    value: String,
+    alpha: Float,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.alpha(alpha),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            modifier = Modifier.size(18.dp),
+            tint = LightGray
+        )
+
+        Spacer(modifier = Modifier.width(Dimensions.SmallSpacing))
+
+        Column {
+            Text(
+                text = "$label:",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = LightGray
+            )
+            Text(
+                text = value,
+                fontSize = 13.sp,
+                color = DarkGray
+            )
+        }
     }
 }
 
@@ -251,6 +345,21 @@ fun SharedTransitionScope.PlantDetailBox(
                 .padding(Dimensions.ContentPadding)
                 .skipToLookaheadSize()
         ) {
+            // Draggable handle
+            Box(
+                modifier = Modifier
+                    .align(androidx.compose.ui.Alignment.CenterHorizontally)
+                    .width(40.dp)
+                    .height(4.dp)
+                    .alpha(contentVisibility)
+                    .background(
+                        color = ScientificNameGray.copy(alpha = 0.3f),
+                        shape = RoundedCornerShape(2.dp)
+                    )
+            )
+
+            Spacer(modifier = Modifier.height(Dimensions.MediumSpacing))
+
             // Shared title
             Text(
                 text = plant.name,
@@ -282,11 +391,66 @@ fun SharedTransitionScope.PlantDetailBox(
 
             Spacer(modifier = Modifier.height(Dimensions.LargeSpacing))
 
+            // Difficulty badge
+            DifficultyBadge(
+                difficulty = plant.difficulty,
+                alpha = contentVisibility
+            )
+
+            Spacer(modifier = Modifier.height(Dimensions.LargeSpacing))
+
+            // Care Instructions Section Title
+            Text(
+                text = "Care Instructions",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = ScientificNameGray,
+                modifier = Modifier.alpha(contentVisibility)
+            )
+
+            Spacer(modifier = Modifier.height(Dimensions.SmallSpacing))
+
+            // Parse and display care instructions
+            val careInstructions = remember(plant.careInstructions) {
+                plant.careInstructions.split("\n").mapNotNull { line ->
+                    val parts = line.split(":", limit = 2)
+                    if (parts.size == 2) {
+                        val label = parts[0].trim()
+                        val value = parts[1].trim()
+                        val icon = getCareIcon(label)
+                        if (icon != null) Triple(icon, label, value) else null
+                    } else null
+                }
+            }
+
+            careInstructions.forEach { (icon, label, value) ->
+                CareInstructionItem(
+                    icon = icon,
+                    label = label,
+                    value = value,
+                    alpha = contentVisibility
+                )
+                Spacer(modifier = Modifier.height(Dimensions.SmallSpacing))
+            }
+
+            Spacer(modifier = Modifier.height(Dimensions.MediumSpacing))
+
+            // Divider
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .alpha(contentVisibility)
+                    .background(LightGray)
+            )
+
+            Spacer(modifier = Modifier.height(Dimensions.MediumSpacing))
+
             // Details
             Text(
                 text = plant.details,
-                fontSize = 14.sp,
-                color = ScientificNameGray,
+                fontSize = 13.sp,
+                color = DarkGray,
                 modifier = Modifier.alpha(contentVisibility)
             )
         }
