@@ -21,4 +21,14 @@ object Dimensions {
     val MediumSpacing = 8.dp
     val LargeSpacing = 16.dp
     val BackButtonSize = 50.dp
+
+    // Detail screen specific dimensions
+    val FadeGradientHeight = 32.dp
+    val DragHandleWidth = 40.dp
+    val DragHandleHeight = 4.dp
+    val BadgeHorizontalPadding = 10.dp
+    val BadgeVerticalPadding = 4.dp
+    val CareIconSize = 18.dp
+    val DividerHeight = 1.dp
+    val ShadowElevation = 16.dp
 }

@@ -1,10 +1,8 @@
 package com.jan.composeset.detailScreen
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.jan.composeset.AnimationConfig
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,21 +12,19 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
-class PlantDetailAnimationController(
+class PlantDetailViewModel(
     private val onNavigateBack: () -> Unit
-) {
+) : ViewModel() {
     private val actionChannel = Channel<AnimationAction>(Channel.BUFFERED)
     private val _animationState = MutableStateFlow(AnimationState())
     val animationState: StateFlow<AnimationState> = _animationState.asStateFlow()
-
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     init {
         startActionProcessor()
     }
 
     private fun startActionProcessor() {
-        scope.launch {
+        viewModelScope.launch {
             for (action in actionChannel) {
                 processAction(action)
             }
@@ -133,9 +129,8 @@ class PlantDetailAnimationController(
         actionChannel.trySend(AnimationAction.UpdateDragOffset(delta, minOffset, maxOffset))
     }
 
-    fun dispose() {
-        actionChannel.trySend(AnimationAction.ResetState)
-        scope.cancel()
+    override fun onCleared() {
+        super.onCleared()
         actionChannel.close()
     }
 }
