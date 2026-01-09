@@ -8,11 +8,6 @@ enum class Difficulty {
     HARD
 }
 
-data class ParsedCareInstruction(
-    val label: String,
-    val value: String
-)
-
 data class Plant(
     val id: Int,
     val name: String,
@@ -21,19 +16,7 @@ data class Plant(
     val details: String,
     val careInstructions: String,
     val difficulty: Difficulty
-) {
-    // Computed property for parsed care instructions
-    val parsedCareInstructions: List<ParsedCareInstruction>
-        get() = careInstructions.split("\n").mapNotNull { line ->
-            val parts = line.split(":", limit = 2)
-            if (parts.size == 2) {
-                ParsedCareInstruction(
-                    label = parts[0].trim(),
-                    value = parts[1].trim()
-                )
-            } else null
-        }
-}
+)
 
 object PlantData {
     val plants = listOf(
@@ -128,8 +111,6 @@ object PlantData {
         difficulty = Difficulty.EASY
     )
     )
-
-    fun getPlantById(id: Int): Plant? = plants.firstOrNull { it.id == id }
 }
 
 // Legacy export for backward compatibility

@@ -35,9 +35,7 @@ class PlantDetailViewModel(
         when (action) {
             is AnimationAction.AnimateEntry -> handleEntryAnimation()
             is AnimationAction.AnimateExit -> handleExitAnimation(action.onComplete)
-            is AnimationAction.UpdateOffsetAdjustment -> handleOffsetAdjustmentUpdate(action.adjustment)
             is AnimationAction.UpdateDragOffset -> handleDragOffsetUpdate(action)
-            is AnimationAction.ResetState -> _animationState.update { AnimationState() }
         }
     }
 
@@ -95,10 +93,6 @@ class PlantDetailViewModel(
         onComplete()
     }
 
-    private suspend fun handleOffsetAdjustmentUpdate(adjustment: Float) {
-        _animationState.update { it.copy(offsetAdjustment = adjustment) }
-    }
-
     private suspend fun handleDragOffsetUpdate(action: AnimationAction.UpdateDragOffset) {
         val newOffset = (_animationState.value.boxOffsetYTarget + action.delta).coerceIn(
             action.minOffset,
@@ -119,10 +113,6 @@ class PlantDetailViewModel(
 
     fun animateExit(onComplete: () -> Unit = {}) {
         actionChannel.trySend(AnimationAction.AnimateExit(onComplete))
-    }
-
-    fun updateOffsetAdjustment(adjustment: Float) {
-        actionChannel.trySend(AnimationAction.UpdateOffsetAdjustment(adjustment))
     }
 
     fun updateDragOffset(delta: Float, minOffset: Float, maxOffset: Float) {
