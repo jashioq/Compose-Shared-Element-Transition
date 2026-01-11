@@ -23,12 +23,26 @@ import com.jan.composeset.detailScreen.components.PlantDetailImage
 import com.jan.composeset.ui.theme.DetailBackground
 import com.jan.composeset.ui.theme.InitialDetailBackground
 
+/**
+ * Coordinator composable for the plant detail screen, managing background and button animations.
+ *
+ * Unified Content Visibility:
+ * A single state variable (contentVisibilityTarget) drives:
+ * - Background color alpha interpolation
+ * - Back button fade-in
+ * - All content inside PlantDetailBox
+ * - Shadow opacity
+ * - Drag handle visibility
+ *
+ * @param cornerRadius The animated corner radius passed from Navigation (synced with shared element transition)
+ */
 @Composable
 fun SharedTransitionScope.PlantDetailContent(
     plant: Plant,
     animatedVisibilityScope: AnimatedVisibilityScope,
     viewModel: PlantDetailViewModel,
-    cornerRadius: Dp
+    cornerRadius: Dp,
+    onBackClick: () -> Unit
 ) {
     val animationState by viewModel.animationState.collectAsState()
 
@@ -81,7 +95,7 @@ fun SharedTransitionScope.PlantDetailContent(
         }
 
         PlantDetailBackButton(
-            onClick = { viewModel.animateExit() },
+            onClick = { viewModel.animateExit(onBackClick) },
             alpha = backButtonAlpha,
             modifier = Modifier.align(Alignment.TopStart)
         )

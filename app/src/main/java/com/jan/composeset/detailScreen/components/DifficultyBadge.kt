@@ -30,9 +30,9 @@ fun DifficultyBadge(
     }
 
     val textColor = when (difficulty) {
-        Difficulty.EASY -> Color(0xFF2D6A4F)      // Dark green
-        Difficulty.MEDIUM -> Color(0xFF8B7500)    // Dark yellow/gold
-        Difficulty.HARD -> Color(0xFFC1666B)      // Dark rose
+        Difficulty.EASY -> Color(0xFF2D6A4F)
+        Difficulty.MEDIUM -> Color(0xFF8B7500)
+        Difficulty.HARD -> Color(0xFFC1666B)
     }
 
     Box(

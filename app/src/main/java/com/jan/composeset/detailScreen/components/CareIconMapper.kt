@@ -7,7 +7,6 @@ import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.ui.graphics.vector.ImageVector
 
-// Helper function to get care icon based on label
 fun getCareIcon(label: String): ImageVector? {
     return when (label.lowercase()) {
         "water" -> Icons.Filled.WaterDrop

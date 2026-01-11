@@ -19,6 +19,22 @@ import androidx.navigation.navArgument
 import com.jan.composeset.detailScreen.PlantDetailScreen
 import com.jan.composeset.listScreen.PlantListScreen
 
+/**
+ * Navhost with shared element transitions and synchronized corner radius animation.
+ *
+ * Demonstrates animating a non-standard property (corner radius) alongside shared element bounds.
+ *
+ * Why This Works:
+ * - Same duration (1000ms) keeps corner radius in sync with bounds
+ * - Both list card AND detail screen receive currentRadius.dp parameter
+ * - List card applies radius conditionally: if (plant.id == selectedPlantId) cornerRadius else CornerRadiusLarge
+ * - Detail screen image and box both use the animated radius
+ *
+ * This technique can be applied to animate any property alongside shared element transitions.
+ *
+ * @param cornerRadiusState Shared state for corner radius animation (updated on navigation)
+ * @param boundsTransform Shared element bounds animation (1000ms tween)
+ */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun SharedTransitionScope.PlantNavigation(
@@ -62,7 +78,6 @@ fun SharedTransitionScope.PlantNavigation(
             PlantDetailScreen(
                 plantId = plantId,
                 animatedVisibilityScope = this@composable,
-                boundsTransform = boundsTransform,
                 cornerRadius = currentRadius.dp,
                 onBackClick = {
                     cornerRadiusState.updateRadius(Dimensions.CornerRadiusLarge.value, plantId)

@@ -27,6 +27,12 @@ import com.jan.composeset.Plant
 import com.jan.composeset.detailScreen.PlantDetailViewModel
 import com.jan.composeset.ui.theme.DetailBackground
 
+/**
+ * Plant image shared element with corner radius animation and gradient overlay fade.
+ *
+ * @param cornerRadius Animated value from Navigation (drives rounded corner morph)
+ * @param viewModel Provides animation state for content visibility
+ */
 @Composable
 fun SharedTransitionScope.PlantDetailImage(
     plant: Plant,

@@ -2,7 +2,6 @@ package com.jan.composeset.detailScreen
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -19,19 +18,15 @@ import com.jan.composeset.plants
 fun SharedTransitionScope.PlantDetailScreen(
     plantId: Int,
     animatedVisibilityScope: AnimatedVisibilityScope,
-    boundsTransform: BoundsTransform,
     cornerRadius: Dp,
     onBackClick: () -> Unit,
 ) {
     val plant = plants.firstOrNull { it.id == plantId } ?: return
 
-    // Create ViewModel with factory
-    val viewModel: PlantDetailViewModel = viewModel(
-        factory = PlantDetailViewModelFactory(onNavigateBack = onBackClick)
-    )
+    val viewModel: PlantDetailViewModel = viewModel()
 
     BackHandler(onBack = {
-        viewModel.animateExit()
+        viewModel.animateExit(onBackClick)
     })
 
     Box(
@@ -43,7 +38,8 @@ fun SharedTransitionScope.PlantDetailScreen(
             plant = plant,
             animatedVisibilityScope = animatedVisibilityScope,
             viewModel = viewModel,
-            cornerRadius = cornerRadius
+            cornerRadius = cornerRadius,
+            onBackClick = onBackClick
         )
     }
 }

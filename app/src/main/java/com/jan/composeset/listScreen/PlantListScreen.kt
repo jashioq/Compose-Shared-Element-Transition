@@ -45,6 +45,9 @@ fun SharedTransitionScope.PlantListScreen(
             .fillMaxSize()
     ) {
         items(plants) { plant ->
+            if (plant.id == 0) {
+                Spacer(modifier = Modifier.height(displayCutoutHeight))
+            }
             PlantCard(
                 plant = plant,
                 animatedVisibilityScope = animatedVisibilityScope,
@@ -53,7 +56,6 @@ fun SharedTransitionScope.PlantListScreen(
                     onPlantClick(plant.id)
                 },
                 cornerRadius = if (plant.id == selectedPlantId) cornerRadius else Dimensions.CornerRadiusLarge,
-                displayCutoutHeight = displayCutoutHeight,
             )
         }
     }
@@ -66,11 +68,7 @@ fun SharedTransitionScope.PlantCard(
     boundsTransform: BoundsTransform,
     onClick: () -> Unit,
     cornerRadius: Dp,
-    displayCutoutHeight: Dp,
 ) {
-    if (plant.id == 0) {
-        Spacer(modifier = Modifier.height(displayCutoutHeight))
-    }
     Box(
         modifier = Modifier
             .fillMaxWidth()

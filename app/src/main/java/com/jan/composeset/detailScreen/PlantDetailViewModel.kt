@@ -12,9 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
-class PlantDetailViewModel(
-    private val onNavigateBack: () -> Unit
-) : ViewModel() {
+class PlantDetailViewModel : ViewModel() {
     private val actionChannel = Channel<AnimationAction>(Channel.BUFFERED)
     private val _animationState = MutableStateFlow(AnimationState())
     val animationState: StateFlow<AnimationState> = _animationState.asStateFlow()
@@ -39,6 +37,28 @@ class PlantDetailViewModel(
         }
     }
 
+    /**
+     * Orchestrates the 3-stage entry animation sequence for the plant detail screen.
+     *
+     * This demonstrates advanced animation coordination by combining SharedTransitionScope bounds
+     * animation with custom content animations, using coroutine delays to stage the transitions.
+     *
+     * Animation Stages:
+     * 1. Bounds Transition (0-1000ms): SharedTransitionScope animates shared elements
+     * 2. Content Expansion (1000-1500ms): Box wraps content, height changes trigger offset adjustment
+     * 3. Content Fade-in (1000-1500ms): Alpha animates 0f to 1f, background color lerps white to gray
+     * 4. Enable Interactivity (1500ms+): Dragging enabled, z-index increased to overlay above list
+     *
+     * Key Techniques:
+     * - Uses kotlinx.coroutines.delay to sequence animations
+     * - StateFlow updates trigger reactive UI changes
+     * - Offset adjustment auto-calculates when AnimationState.boxShouldWrapContent changes
+     *
+     * @see AnimationState.contentVisibilityTarget Controls fade-in alpha (0f to 1f)
+     * @see AnimationState.boxShouldWrapContent Enables dynamic height measurement
+     * @see AnimationConfig.BOUNDS_TRANSITION_MS Shared element transition duration
+     * @see AnimationConfig.CONTENT_FADE_MS Content visibility animation duration
+     */
     private suspend fun handleEntryAnimation() {
         _animationState.update { it.copy(isAnimating = true) }
 
@@ -63,6 +83,19 @@ class PlantDetailViewModel(
         _animationState.update { it.copy(isAnimating = false) }
     }
 
+    /**
+     * Orchestrates the exit animation sequence, reversing the entry stages.
+     *
+     * Animation Stages:
+     * 1. Disable Drag + Fade Out (0-500ms): Content alpha to 0f, offset to 0f, background color to white
+     * 2. Reset Layout (500ms): Box collapses, offset adjustment cleared simultaneously
+     * 3. Navigation: Triggers onComplete callback after animations complete
+     *
+     * Critical Detail: Stage 2 resets boxShouldWrapContent AND offsetAdjustment in the
+     * SAME state emission to avoid visual flickering during the bounds transition back to list.
+     *
+     * @param onComplete Callback invoked after all animations finish (e.g., for navigation)
+     */
     private suspend fun handleExitAnimation(onComplete: () -> Unit) {
         _animationState.update { it.copy(isAnimating = true) }
 
@@ -89,11 +122,20 @@ class PlantDetailViewModel(
 
         _animationState.update { it.copy(isAnimating = false) }
 
-        onNavigateBack()
         onComplete()
     }
 
-    private suspend fun handleDragOffsetUpdate(action: AnimationAction.UpdateDragOffset) {
+    /**
+     * Updates the drag offset while constraining movement within calculated bounds.
+     *
+     * The bounds are calculated dynamically based on content height changes:
+     * - minOffset = -(expandedHeight - collapsedHeight) (can drag up to fully collapse)
+     * - maxOffset = 0f (cannot drag down beyond natural position)
+     *
+     * Uses AnimationConfig.DEFAULT_DRAG_SPEED (30ms) for immediate, linear tracking
+     * of finger movement during drag.
+     */
+    private fun handleDragOffsetUpdate(action: AnimationAction.UpdateDragOffset) {
         val newOffset = (_animationState.value.boxOffsetYTarget + action.delta).coerceIn(
             action.minOffset,
             action.maxOffset
@@ -111,8 +153,8 @@ class PlantDetailViewModel(
         actionChannel.trySend(AnimationAction.AnimateEntry)
     }
 
-    fun animateExit(onComplete: () -> Unit = {}) {
-        actionChannel.trySend(AnimationAction.AnimateExit(onComplete))
+    fun animateExit(onNavigateBack: () -> Unit) {
+        actionChannel.trySend(AnimationAction.AnimateExit(onNavigateBack))
     }
 
     fun updateDragOffset(delta: Float, minOffset: Float, maxOffset: Float) {

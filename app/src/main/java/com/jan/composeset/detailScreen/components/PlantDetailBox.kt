@@ -49,6 +49,41 @@ import com.jan.composeset.ui.theme.ScientificNameGray
 import kotlin.math.floor
 import kotlin.math.roundToInt
 
+/**
+ * The draggable content box for the plant detail screen.
+ *
+ * This is a showcase component demonstrating 5+ synchronized animations:
+ * 1. Shared Element Transition: Entire box animates bounds from list card
+ * 2. Corner Radius Animation: Rounded corners animate 32dp to 0dp
+ * 3. Offset Animation: Draggable Y-offset with dynamic easing (linear drag, eased exit)
+ * 4. Content Visibility: Alpha fade 0f to 1f for content
+ * 5. Shadow Animation: Drop shadow opacity animates with content visibility
+ *
+ * Techniques:
+ * Height-Dependent Offset Adjustment:
+ * - Tracks boxHeightBeforeDrag (collapsed) and boxHeightAfterDrag (expanded)
+ * - Calculates offsetAdjustment = (expandedHeight - collapsedHeight) / 2
+ * - Applies adjustment to center the box during height changes (prevents upward jump)
+ *
+ * Conditional Easing:
+ * - Drag: Uses LinearEasing for smooth 1:1 tracking with DEFAULT_DRAG_SPEED
+ * - Exit: Uses FastOutSlowInEasing for natural-feeling return animation with CONTENT_FADE_MS
+ *
+ * Dynamic Drag Bounds:
+ * - Calculated from content height difference: maxDragDistance = -(expandedHeight - collapsedHeight)
+ * - Allows dragging up to collapse content fully, but not beyond natural position
+ *
+ * Shared Element Context:
+ * - Uses sharedElement(key = "box-${plant.id}") to transition from list card
+ * - Becomes draggable only after entry animation completes
+ * - Uses .skipToLookaheadSize() to skip shared element lookahead measurements for children
+ *
+ * @param plant Plant data to display
+ * @param viewModel Provides animation state and handles drag events
+ * @param cornerRadius Animated corner radius value from Navigation (32dp to 0dp)
+ * @param animatedVisibilityScope Required for shared element transitions
+ * @param boundsTransform Defines transition timing (1000ms tween)
+ */
 @Composable
 fun SharedTransitionScope.PlantDetailBox(
     plant: Plant,

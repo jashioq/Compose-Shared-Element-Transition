@@ -17,10 +17,10 @@ val DetailBackground = Color.LightGray
 val ScientificNameGray = Color.Gray
 
 // Difficulty badge colors
-val DifficultyEasy = Color(0xFFA8D5BA)      // Pastel Green
-val DifficultyMedium = Color(0xFFFFF4C4)    // Pastel Yellow
-val DifficultyHard = Color(0xFFFFB3BA)      // Pastel Red
+val DifficultyEasy = Color(0xFFA8D5BA)
+val DifficultyMedium = Color(0xFFFFF4C4)
+val DifficultyHard = Color(0xFFFFB3BA)
 
 // Care instruction colors
-val LightGray = Color(0xFF757575)        // Icon tint
-val DarkGray = Color(0xFF424242)       // Value text
+val LightGray = Color(0xFF757575)
+val DarkGray = Color(0xFF424242)
