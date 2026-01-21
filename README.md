@@ -1,6 +1,6 @@
 # Shared Element Transitions with Synchronized Animations
 
-A plant catalog app demonstrating advanced Jetpack Compose shared element transitions combined with custom animations. Shows how to synchronize SharedTransitionScope bounds animations with non-standard property animations like corner radius morphing.
+A plant catalog app demonstrating advanced Jetpack Compose shared element transitions combined with custom animations during navigation between different screens in a navhost. Shows how to synchronize SharedTransitionScope bounds animations with non-standard property animations like corner radius.
 
 https://github.com/user-attachments/assets/ee05a444-1418-4a39-9501-984552a17dac
 
