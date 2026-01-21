@@ -2,6 +2,8 @@
 
 A plant catalog app demonstrating advanced Jetpack Compose shared element transitions combined with custom animations. Shows how to synchronize SharedTransitionScope bounds animations with non-standard property animations like corner radius morphing.
 
+https://github.com/user-attachments/assets/ee05a444-1418-4a39-9501-984552a17dac
+
 ## How It Works
 
 This app coordinates multiple animations across navigation transitions using a 3-stage entry sequence and synchronized corner radius animation.
